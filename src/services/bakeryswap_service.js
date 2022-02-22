@@ -29,66 +29,13 @@ export class BakerySwapContractService extends BaseContractService{
   }
 
   async getTokenABalance() {
-    // Get BEP-20 token balance from smart contract function, in terms of BEP-20 token unit (i.e. CAKE)
-    var contract = new this.web3.eth.Contract(tokenAbi, this.tokenA.address);
-    var balance = await contract.methods.balanceOf(this.account.address).call();
-    var aBalance = this.web3.utils.fromWei(balance, 'ether');
-
-    return aBalance;
-  }
-
-  async getTokenBBalance() {
-    // Get native token balance, in terms of native unit (i.e. BNB)
-    var balance = await this.web3.eth.getBalance(this.account.address);
-    var bBalance = this.web3.utils.fromWei(balance, 'ether');
-    
-    return bBalance;
+    return await this._getTokenABalance(tokenAbi);
   }
 
   async getLPTokenBalance() {
-    // Get LP token balance from smart contract function
-    var contract = new this.web3.eth.Contract(tokenAbi, this.tokenLP.address);
-    var balance = await contract.methods.balanceOf(this.account.address).call();
-    var lpBalance = this.web3.utils.fromWei(balance, 'ether');
-
-    return lpBalance;
+    return await this._getLPTokenBalance(tokenAbi);
   }
 
-  async _getAmountsOut(amountIn, path) {
-    // ABI function getAmountsOut for estimating amountOutMin
-    var contract = new this.web3.eth.Contract(routerAbi, this.routerAddress);
-    var amountOutMin = await contract.methods.getAmountsOut(amountIn, path).call();
-    return amountOutMin[1];
-  }
-
-  async _doTransaction(rawTransaction) {
-    // Sign and broadcast the transaction from raw txn data
-    
-    // TODO: Use estimated gas function for all functions. Right now we just hardcoded gas fees for simplicity
-    // Gas fee = gasLimit * gasPrice + value.
-    var count = await this.web3.eth.getTransactionCount(this.account.address);
-    rawTransaction['nouce'] = this.web3.utils.toHex(count);
-    rawTransaction['chainId'] = this.connectedChainId;
-
-    var signedTx = await this.account.signTransaction(rawTransaction);
-    var result = await this.web3.eth.sendSignedTransaction(signedTx.rawTransaction)
-    .on('transactionHash', function(hash){
-        // console.log('transactionHash', hash);
-    })
-    .on('confirmation', function(confirmationNumber, receipt){
-        // console.log('confirmation', confirmationNumber, receipt);
-    })
-    .on('receipt', function(receipt){
-        // console.log('receipt', receipt);
-    })
-    .on('error', function(error, receipt) { // If the transaction was rejected by the network with a receipt, the second parameter will be the receipt.
-        console.error("Error:", error, "Receipt:", receipt);
-    });
-
-    return result;
-  }
-
-  // harvesting CAKE (A)
   async harvestTokenA() {
     var contract = new this.web3.eth.Contract(lpAbi, this.tokenLP.stakingAddress);
     var data = contract.methods.harvest();
@@ -107,13 +54,13 @@ export class BakerySwapContractService extends BaseContractService{
     return txnResult;
   }
 
-  // selling half of the CAKE (A) into BNB (B)
   async swapTokenAToNative(tokenAAmount) {
     var amountIn = tokenAAmount * 10 ** this.tokenA.decimals;
     var routerPath = [this.tokenA.address, this.tokenB.wrappedAddress];
 
     // Get price-converted output amount
     var amountOutMin = await this._getAmountsOut(
+      routerAbi,
       this.web3.utils.toHex(amountIn),
       routerPath,
     );
@@ -143,7 +90,6 @@ export class BakerySwapContractService extends BaseContractService{
     return txnResult;
   }
 
-  // getting new CAKE-BNB tokens by CAKE and BNB tokens above
   async getNewLP(tokenAAmount, tokenBAmount) {
     // Controlling WETH/token liquidity ratio shall be done already by caller function
     console.log("Minting LP tokens for A=", tokenAAmount, "; B=", tokenBAmount);
@@ -185,7 +131,6 @@ export class BakerySwapContractService extends BaseContractService{
     return txnResult;
   }
 
-  // re-investing all CAKE-BNB LPs into the yield farm
   async stakeLP(tokenLPAmount) {
     var tokenLPWeis = tokenLPAmount * 10 ** this.tokenLP.decimals;
     var contract = new this.web3.eth.Contract(lpAbi, this.tokenLP.stakingAddress);
@@ -206,6 +151,15 @@ export class BakerySwapContractService extends BaseContractService{
     var txnResult = await this._doTransaction(rawTransaction);
 
     return txnResult;
+  }
+
+  async getTokenAReward() {
+    // Get BEP-20 pending token from smart contract function, in terms of BEP-20 token unit (i.e. CAKE)
+    var contract = new this.web3.eth.Contract(lpAbi, this.tokenLP.stakingAddress);
+    var balance = await contract.methods.pendingToken(this.tokenLP.address, this.account.address).call();
+    var ptBalance = this.web3.utils.fromWei(balance, 'ether');
+
+    return ptBalance;
   }
 
 }

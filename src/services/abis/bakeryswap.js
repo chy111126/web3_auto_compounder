@@ -148,6 +148,7 @@ export const routerAbi = [{
       "type":"function"
 }];
 
+// Reference: https://bscscan.com/address/0x6a8DbBfbB5a57d07D14E63E757FB80B4a7494f81#code
 export const lpAbi = [
     {
       "inputs":[{"name":"token","type":"address"}, {"name":"amount","type":"uint256"}],
@@ -160,5 +161,20 @@ export const lpAbi = [
       "name":"harvest",
       "outputs":[],
       "type":"function"
-    }
+    },
+    {
+      "inputs": [{
+          "name": "_pair",
+          "type": "address"
+      }, {
+          "name": "_user",
+          "type": "address"
+      }],
+      "name": "pendingToken",
+      "outputs": [{
+          "name": "",
+          "type": "uint256"
+      }],
+      "type": "function"
+  }
 ];

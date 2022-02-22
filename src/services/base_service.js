@@ -4,8 +4,8 @@ The smart contract service should support two tokens: A and native token (B)
 */
 export class BaseContractService {
   
-  initialize(env, accountPrivateKey) {
-    // Inherited class shall implement these fields
+  async initialize(env, accountPrivateKey) {
+    // Inherited class shall implement these fields for Web3 services
     // this.web3: Web3
     // this.connectedChainId
     // this.account
@@ -17,7 +17,7 @@ export class BaseContractService {
     throw new Error("Not yet implemented.");
   }
 
-  async getTokenABalance() {
+  async _getTokenABalance(tokenAbi) {
     // Get BEP-20 token balance from smart contract function, in terms of BEP-20 token unit (i.e. CAKE)
     var contract = new this.web3.eth.Contract(tokenAbi, this.tokenA.address);
     var balance = await contract.methods.balanceOf(this.account.address).call();
@@ -34,7 +34,7 @@ export class BaseContractService {
     return bBalance;
   }
 
-  async getLPTokenBalance() {
+  async _getLPTokenBalance(tokenAbi) {
     // Get LP token balance from smart contract function
     var contract = new this.web3.eth.Contract(tokenAbi, this.tokenLP.address);
     var balance = await contract.methods.balanceOf(this.account.address).call();
@@ -43,7 +43,7 @@ export class BaseContractService {
     return lpBalance;
   }
 
-  async _getAmountsOut(amountIn, path) {
+  async _getAmountsOut(routerAbi, amountIn, path) {
     // ABI function getAmountsOut for estimating amountOutMin
     var contract = new this.web3.eth.Contract(routerAbi, this.routerAddress);
     var amountOutMin = await contract.methods.getAmountsOut(amountIn, path).call();
@@ -77,32 +77,59 @@ export class BaseContractService {
     return result;
   }
 
-  getTokenABalance() {
+  async harvestTokenA() {
+    // harvesting CAKE (A)
     throw new Error("Not yet implemented.");
   }
 
-  getTokenBBalance() {
+  async swapTokenAToNative(tokenAAmount) {
+    // selling CAKE (A) into BNB (B)
     throw new Error("Not yet implemented.");
   }
 
-  // harvesting CAKE (A)
-  harvestTokenA() {
+  async getNewLP(tokenAAmount, tokenBAmount) {
+    // getting new CAKE-BNB tokens by CAKE and BNB tokens above
     throw new Error("Not yet implemented.");
   }
 
-  // selling half of the CAKE (A) into BNB (B)
-  swapTokenAToNative(tokenAAmount) {
+  async reinvestLP() {
+    // investing all CAKE-BNB LPs into the yield farm
     throw new Error("Not yet implemented.");
   }
 
-  // getting new CAKE-BNB tokens by CAKE and BNB tokens above
-  getNewLP(tokenAAmount, tokenBAmount) {
+  async getTokenAReward() {
+    // getting pending reward from staking CAKE-BNB LP pair
     throw new Error("Not yet implemented.");
   }
 
-  // re-investing all CAKE-BNB LPs into the yield farm
-  reinvestLP() {
-    throw new Error("Not yet implemented.");
+  // Local helper functions
+
+  getTokenAUnit() {
+    // Get the name "CAKE" for CAKE-BNB example
+    return this.tokenA.name;
+  }
+
+  getTokenBUnit() {
+    // Get the name "BNB" for CAKE-BNB example
+    return this.tokenB.name;
+  }
+
+  getExpectedControlCost() {
+    // From gas fee settings, compute the control cost that the pending reward shall be higher than this value
+    // This function should be returning cost in terms of native token B
+    
+    // The control flow of the program is expected to be the following:
+    // (looping getTokenAReward) -> harvestTokenA -> swapTokenAToNative -> getNewLP -> reinvestLP -> loop
+    // So the control cost is by adding up all contract txn functions, as sum of gasPrice * gasLimit
+
+    var invokingFunctions = [
+      this.txnSettings.harvestTokenA,
+      this.txnSettings.swapTokenAToNative,
+      this.txnSettings.getNewLP,
+      this.txnSettings.stakeLP,
+    ];
+
+    return invokingFunctions.reduce((prevSum, currentFunction) => prevSum + (currentFunction.gasPrice * currentFunction.gasLimit), 0) / 10 ** this.tokenB.decimals;
   }
 
 }

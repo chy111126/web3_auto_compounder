@@ -17,7 +17,7 @@ export const env = {
         },
         tokenB: {
             name: "BNB",
-            decimals: 18,
+            decimals: 18, // Native token, must supply decimals for Wei-Ether conversion
             address: "native",
             wrappedAddress: "0x094616F0BdFB0b526bD735Bf66Eca0Ad254ca81F",
         },
@@ -30,8 +30,8 @@ export const env = {
     },
     txnSettings: {
         harvestTokenA: {
-            gasPrice: 20000000000,
-            gasLimit: 250000,
+            gasPrice: 20000000000, // Gas prices are in terms of wei
+            gasLimit: 250000, // Gas limits are arbitary quotes to be consumed when invoking EVM
         },
         swapTokenAToNative: {
             gasPrice: 10000000000,
