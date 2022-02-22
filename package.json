@@ -1,0 +1,25 @@
+{
+  "name": "auto_compounder_assignment",
+  "version": "1.0.0",
+  "description": "An assignment for auto-compounder of tokens",
+  "type": "module",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chy111126/auto_compounder_assignment.git"
+  },
+  "author": "Tom Chau",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/chy111126/auto_compounder_assignment/issues"
+  },
+  "homepage": "https://github.com/chy111126/auto_compounder_assignment#readme",
+  "devDependencies": {},
+  "dependencies": {
+    "web3": "^1.7.0"
+  }
+}
