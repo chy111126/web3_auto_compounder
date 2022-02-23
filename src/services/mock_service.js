@@ -93,14 +93,16 @@ export class MockContractService extends BaseContractService{
     this.account.tokenABalance -= tokenAAmount;
     this.account.tokenBBalance -= tokenBAmount;
 
-    this.lpPool.tokenAPool += tokenAAmount;
-    this.lpPool.tokenBPool += tokenBAmount;
-
-    // Minting shares: Simple calculation based on existing issuance, based on token B
+    // Minting shares: Simple calculation based on existing issuance, based on token B before putting new funds in
     var totalTokenBLiquidity = this.lpPool.tokenBPool;
     var totalLPTokens = this.lpPool.totalLPTokenIssued + this.account.tokenLPBalance + this.lpPool.accountStakingLPToken;
     var liquidities = tokenBAmount / totalTokenBLiquidity;
     var expectedLPTokenReceived = totalLPTokens * liquidities;
+    // console.log({totalTokenBLiquidity, totalLPTokens, liquidities, expectedLPTokenReceived});
+
+    // Put the new funds for new base
+    this.lpPool.tokenAPool += tokenAAmount;
+    this.lpPool.tokenBPool += tokenBAmount;
 
     // Put the minted LP to wallet
     this.account.tokenLPBalance += expectedLPTokenReceived;
@@ -142,7 +144,8 @@ export class MockContractService extends BaseContractService{
     // Remove liquidity
     // var initialAToBPrice = this.tokenA.initalPriceUSDT / this.tokenB.initalPriceUSDT; // 0.0333 BNB per CAKE at start
     var finalAToBPrice = this.tokenA.currentPrice / this.tokenB.currentPrice; // 0.0205 BNB per CAKE at the end
-    
+    // Update liquidity
+    this.lpPool.liquiditySquare = this.lpPool.tokenAPool * this.lpPool.tokenBPool;
     var finalTokenAReserve = Math.sqrt(this.lpPool.liquiditySquare / finalAToBPrice);
     var finalTokenBReserve = Math.sqrt(this.lpPool.liquiditySquare * finalAToBPrice);
     
@@ -151,7 +154,8 @@ export class MockContractService extends BaseContractService{
     var liquidities = this.account.tokenLPBalance / totalLPTokens;
     var retrievedTokenA = liquidities * finalTokenAReserve;
     var retrievedTokenB = liquidities * finalTokenBReserve;
-    console.log(finalTokenAReserve, finalTokenBReserve, retrievedTokenA, retrievedTokenB);
+    var accountLPBalance = this.account.tokenLPBalance;
+    console.log({finalAToBPrice, totalLPTokens, liquidities, accountLPBalance, finalTokenAReserve, finalTokenBReserve, retrievedTokenA, retrievedTokenB});
 
     // Put retrieved token back to wallet
     this.account.tokenABalance += retrievedTokenA;
