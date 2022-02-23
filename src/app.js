@@ -1,32 +1,39 @@
+import { exit } from "process";
 import { MockContractService } from "./services/mock_service.js";
 
-// Get private key
-var data = (await import('fs')).readFileSync('./src/common/wallets/bsc_testnet.txt', 'utf8');
-
 // Create service and auto-compunder environment
-var env = (await import("./common/envs/cake_bnb_mock_no_variance.js")).env;
+var data = (await import('fs')).readFileSync('./src/common/wallets/bsc_testnet.txt', 'utf8');
+var env = (await import("./common/envs/cake_bnb_mock.js")).env;
 var cs = await new MockContractService().initialize(env);
 
 // Get initial stats
 var tokenPair = `${cs.getTokenAName()}/${cs.getTokenBName()}`;
 console.log(`Program start: ${tokenPair} price ${await cs.getTokenAPricePerB()}`);
-console.log(`Wallet initial balance: ${cs.getTokenAName()}=>${await cs.getTokenABalance()}; ${cs.getTokenBName()}=>${await cs.getTokenBBalance()}; LP=>${await cs.getLPTokenBalance()}`);
+var tokenAAmount = await cs.getTokenABalance();
+var tokenBAmount = await cs.getTokenBBalance();
+console.log(`Wallet initial balance: ${cs.getTokenAName()}=>${tokenAAmount}; ${cs.getTokenBName()}=>${tokenBAmount}; LP=>${await cs.getLPTokenBalance()}`);
+var walletValueUSDT = tokenAAmount * await cs.getTokenAPriceInUSDT() + tokenBAmount * await cs.getTokenBPriceInUSDT();
+console.log(`Wallet value in USDT: ${walletValueUSDT}`);
 
 // Program running time
 var tick = 0;
-var tickDelta = 10; // Tick progression in hours;
-var timeDelay = 50; // While-loop time delay, default equals to tickDelta
-var tickLimit = 365 * 24; 
+var tickDelta = env.programSettings.tickDelta;
+var timeDelay = env.programSettings.timeDelay || env.programSettings.tickDelta * 60 * 60 * 1000;
+var tickLimit = env.programSettings.tickLimit; 
+var autoCompunding = env.programSettings.autoCompunding;
+var reinvestCostRatio = env.programSettings.reinvestCostRatio;
+console.log({tickDelta, timeDelay, tickLimit, autoCompunding, reinvestCostRatio});
 
 // Stake initial LP for mock
 var targetingTokenA = await cs.getTokenABalance();
 var tokenPairPrice = await cs.getTokenAPricePerB();
 var targetingTokenB = targetingTokenA * tokenPairPrice;
 await cs.getNewLP(targetingTokenA, targetingTokenB);
+console.log(`Wallet minted LP balance: ${cs.getTokenAName()}=>${await cs.getTokenABalance()}; ${cs.getTokenBName()}=>${await cs.getTokenBBalance()}; LP=>${await cs.getLPTokenBalance()}`);
 var totalLP = await cs.getLPTokenBalance();
 await cs.stakeLP(totalLP);
 
-
+// Re-investing loop
 while(tick < tickLimit) {
     // Check currently received reward
     var expectedControlCost = cs.getExpectedControlCost();
@@ -35,12 +42,9 @@ while(tick < tickLimit) {
     var tokenARewardInB = tokenAReward * tokenPairPrice;
     //console.log(`Tick=${tick}; Wallet: ${cs.getTokenAName()}=>${await cs.getTokenABalance()}; ${cs.getTokenBName()}=>${await cs.getTokenBBalance()}; LP=>${await cs.getLPTokenBalance()}; expectedControlCost: ${expectedControlCost}; Reward: ${tokenARewardInB}`)
 
-    // For threshold, we need to preserve some BNB for LP+gas instead of using all for LP
-    if (tokenARewardInB > expectedControlCost * 100 && true) {
-        // console.log("-=-=-=-=-=-=-");
+    if (tokenARewardInB > expectedControlCost * reinvestCostRatio && autoCompunding) {
         // Harvest and reinvest if criteria met
         await cs.harvestTokenA();
-        // console.log(`Wallet: ${cs.getTokenAName()}=>${await cs.getTokenABalance()}; ${cs.getTokenBName()}=>${await cs.getTokenBBalance()}; LP=>${await cs.getLPTokenBalance()}`)
 
         // Swap tokens
         var targetingTokenA = await cs.getTokenABalance() / 2;
@@ -49,24 +53,27 @@ while(tick < tickLimit) {
         var targetingTokenAExcludingCost = targetingTokenB / tokenPairPrice;
         await cs.swapTokenAToNative(targetingTokenA);
 
-        // console.log(`Wallet: ${cs.getTokenAName()}=>${await cs.getTokenABalance()}; ${cs.getTokenBName()}=>${await cs.getTokenBBalance()}; LP=>${await cs.getLPTokenBalance()}`)
-
         // Create LP
-        // console.log(`Creating LP CAKE=${targetingTokenA} BNB=${targetingTokenB}`);
         await cs.getNewLP(targetingTokenAExcludingCost, targetingTokenB);
         var totalLP = await cs.getLPTokenBalance();
         await cs.stakeLP(totalLP);
-        // console.log(cs.lpPool.accountStakingLPToken);
-        // console.log("-=-=-=-=-=-=-");
+
     }
     
     // Progress time
     cs.mockTick(tickDelta);
     tick += tickDelta;
-    // await new Promise(resolve => setTimeout(resolve, timeDelay));
+    if (timeDelay > 1) {
+        await new Promise(resolve => setTimeout(resolve, timeDelay));
+    }
 }
 
-await cs.unstakeAndRemoveLP();
-console.log(`Final wallet: ${cs.getTokenAName()}=>${await cs.getTokenABalance()}; ${cs.getTokenBName()}=>${await cs.getTokenBBalance()}; LP=>${await cs.getLPTokenBalance()}`)
-
-
+// Post-step after the re-invest loop
+await cs.unstakeLP(await cs.getStakedLPBalance());
+await cs.removeLP(await cs.getLPTokenBalance());
+var tokenAAmount = await cs.getTokenABalance();
+var tokenBAmount = await cs.getTokenBBalance();
+console.log(`Final wallet balance: ${cs.getTokenAName()}=>${tokenAAmount}; ${cs.getTokenBName()}=>${tokenBAmount}; LP=>${await cs.getLPTokenBalance()}`);
+var finalWalletValueUSDT = tokenAAmount * await cs.getTokenAPriceInUSDT() + tokenBAmount * await cs.getTokenBPriceInUSDT();
+console.log(`Final wallet value in USDT: ${finalWalletValueUSDT}`);
+console.log(`Auto-compounder yield: ${(finalWalletValueUSDT - walletValueUSDT) / walletValueUSDT * 100}%`);

@@ -25,6 +25,16 @@ export class BaseContractService {
     return this.tokenB.name;
   }
 
+  async getTokenAPriceInUSDT() {
+    // getting token A price in USDT
+    throw new Error("Not yet implemented.");
+  }
+
+  async getTokenBPriceInUSDT() {
+    // getting token B price in USDT
+    throw new Error("Not yet implemented.");
+  }
+
   async _getTokenABalance(tokenAbi) {
     // Get BEP-20 token balance from smart contract function, in terms of BEP-20 token unit (i.e. CAKE)
     var contract = new this.web3.eth.Contract(tokenAbi, this.tokenA.address);
@@ -110,8 +120,13 @@ export class BaseContractService {
     throw new Error("Not yet implemented.");
   }
 
-  async unstakeAndRemoveLP() {
-    // unstake the LP and remove liquidity back to CAKE and BNB
+  async unstakeLP(tokenLPAmount) {
+    // unstaking the LP 
+    throw new Error("Not yet implemented.");
+  }
+
+  async removeLP(tokenLPAmount) {
+    // removing liquidity back to CAKE and BNB
     throw new Error("Not yet implemented.");
   }
 

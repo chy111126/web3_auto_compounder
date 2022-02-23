@@ -32,6 +32,21 @@ export const env = {
             gasPrice: 20000000000,
             gasLimit: 250000,
         },
+        unstakeLP: {
+            gasPrice: 20000000000,
+            gasLimit: 250000,
+        },
+        removeLP: {
+            gasPrice: 20000000000,
+            gasLimit: 250000,
+        },
+    },
+    programSettings: {
+        tickDelta: 1, // Tick progression in hours
+        tickLimit: 365 * 24, // How long the program shall be running
+        timeDelay: 1, // If added, overrides default pause after a loop is run
+        autoCompunding: true, // To re-invest or not
+        reinvestCostRatio: 100, // For triggering reinvest given the pending reward can cover expected control cost with threshold
     },
     account: {
         tokenABalance: 6000,
@@ -43,6 +58,6 @@ export const env = {
         tokenAPool: 300000,
         tokenBPool: 10000,
         totalLPTokenIssued: 1000,
-        dailyIssuedTokenAAmount: 100.0
+        dailyIssuedTokenAAmount: 1000.0
     },
 }

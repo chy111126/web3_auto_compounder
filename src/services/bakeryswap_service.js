@@ -28,6 +28,16 @@ export class BakerySwapContractService extends BaseContractService{
     return this;
   }
 
+  async getTokenAPriceInUSDT() {
+    // TODO: Quote the price from an oracle service, implementation is skipped here as this is for yield checking only
+    return 0.0;
+  }
+
+  async getTokenBPriceInUSDT() {
+    // TODO: Quote the price from an oracle service, implementation is skipped here as this is for yield checking only
+    return 0.0;
+  }
+
   async getTokenABalance() {
     return await this._getTokenABalance(tokenAbi);
   }

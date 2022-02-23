@@ -26,17 +26,25 @@ export class MockContractService extends BaseContractService{
     this.tokenB.currentPrice = this.tokenB.initalPriceUSDT;
 
     // Accumulator for LP tokens
-    // this.lpPool.accountAddedTokenA = 0.0;
-    // this.lpPool.accountAddedTokenB = 0.0;
     this.lpPool.initialTokenAPriceInB = this.tokenA.currentPrice / this.tokenB.currentPrice;
     this.lpPool.liquiditySquare = this.lpPool.tokenAPool * this.lpPool.tokenBPool;
     this.lpPool.accountStakingLPToken = 0.0;
 
     // Clock for simulation
     this.tick = 0;
-    this.ticksPerYear = 365 * 24;
+    this.ticksLimit = env.programSettings.tickLimit;
 
     return this;
+  }
+
+  async getTokenAPriceInUSDT() {
+    // getting token A price in USDT
+    return this.tokenA.currentPrice;
+  }
+
+  async getTokenBPriceInUSDT() {
+    // getting token B price in USDT
+    return this.tokenB.currentPrice;
   }
   
   async getTokenABalance() {
@@ -130,19 +138,31 @@ export class MockContractService extends BaseContractService{
     return this.lpPool.accountStakingLPToken;
   }
 
-  async unstakeAndRemoveLP() {
-    // unstake the LP and remove liquidity back to CAKE and BNB
+  async unstakeLP(tokenLPAmount) {
+    // unstaking the LP 
+    // Assert the operation can be paid
+    var gasFee = (this.txnSettings.unstakeLP.gasPrice * this.txnSettings.unstakeLP.gasLimit) / 10 ** this.tokenB.decimals;
+    console.assert(this.account.tokenBBalance - gasFee > 0, gasFee);
 
     // Put pending tokens from lp pool to wallet
     this.account.tokenABalance += this.lpPool.pendingToken;
     this.lpPool.pendingToken = 0.0;
     
     // Unstake LP from pool
-    this.account.tokenLPBalance += this.lpPool.accountStakingLPToken;
+    this.account.tokenLPBalance += tokenLPAmount;
     this.lpPool.accountStakingLPToken = 0;
+    
+    // Charge for gas fee
+    this.account.tokenBBalance -= gasFee;
+  }
+
+  async removeLP(tokenLPAmount) {
+    // removing liquidity back to CAKE and BNB
+    // Assert the operation can be paid
+    var gasFee = (this.txnSettings.removeLP.gasPrice * this.txnSettings.removeLP.gasLimit) / 10 ** this.tokenB.decimals;
+    console.assert(this.account.tokenBBalance - gasFee > 0, gasFee);
 
     // Remove liquidity
-    // var initialAToBPrice = this.tokenA.initalPriceUSDT / this.tokenB.initalPriceUSDT; // 0.0333 BNB per CAKE at start
     var finalAToBPrice = this.tokenA.currentPrice / this.tokenB.currentPrice; // 0.0205 BNB per CAKE at the end
     // Update liquidity
     this.lpPool.liquiditySquare = this.lpPool.tokenAPool * this.lpPool.tokenBPool;
@@ -151,7 +171,7 @@ export class MockContractService extends BaseContractService{
     
     // Get Token A/B from issued LP
     var totalLPTokens = this.lpPool.totalLPTokenIssued + this.account.tokenLPBalance + this.lpPool.accountStakingLPToken;
-    var liquidities = this.account.tokenLPBalance / totalLPTokens;
+    var liquidities = tokenLPAmount / totalLPTokens;
     var retrievedTokenA = liquidities * finalTokenAReserve;
     var retrievedTokenB = liquidities * finalTokenBReserve;
     var accountLPBalance = this.account.tokenLPBalance;
@@ -162,7 +182,10 @@ export class MockContractService extends BaseContractService{
     this.account.tokenBBalance += retrievedTokenB;
 
     // Burn LP token
-    this.account.tokenLPBalance = 0;
+    this.account.tokenLPBalance -= tokenLPAmount;
+    
+    // Charge for gas fee
+    this.account.tokenBBalance -= gasFee;
   }
 
   async getTokenAReward() {
@@ -181,15 +204,15 @@ export class MockContractService extends BaseContractService{
     this.tick += tickAmount;
 
     // Update token prices, simple lerp function
-    this.tokenA.currentPrice = this.tokenA.initalPriceUSDT * (1 * (1 - this.tick / this.ticksPerYear) + this.tokenA.priceYearlyChange * this.tick / this.ticksPerYear);
-    this.tokenB.currentPrice = this.tokenB.initalPriceUSDT * (1 * (1 - this.tick / this.ticksPerYear) + this.tokenB.priceYearlyChange * this.tick / this.ticksPerYear);
+    this.tokenA.currentPrice = this.tokenA.initalPriceUSDT * (1 * (1 - this.tick / this.ticksLimit) + this.tokenA.priceYearlyChange * this.tick / this.ticksLimit);
+    this.tokenB.currentPrice = this.tokenB.initalPriceUSDT * (1 * (1 - this.tick / this.ticksLimit) + this.tokenB.priceYearlyChange * this.tick / this.ticksLimit);
 
     // Issue LP reward according to available liquidity shares
     var totalLPTokens = this.lpPool.totalLPTokenIssued + this.account.tokenLPBalance + this.lpPool.accountStakingLPToken;
     var liquidities = this.lpPool.accountStakingLPToken / totalLPTokens;
-    // console.log(this.lpPool.totalLPTokenIssued, this.lpPool.accountMintedLPToken, this.lpPool.accountStakingLPToken)
     var issuedTokenAReward = this.lpPool.dailyIssuedTokenAAmount * liquidities * (this.tick - lastTick) / 24;
     this.lpPool.pendingToken += issuedTokenAReward;
+    // console.log(this.lpPool.dailyIssuedTokenAAmount);
 
     // Update liquidity pool
     this.lpPool.liquiditySquare = this.lpPool.tokenAPool * this.lpPool.tokenBPool;
