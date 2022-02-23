@@ -3,13 +3,13 @@ export const env = {
         tokenA: {
             name: "CAKE",
             initalPriceUSDT: 10.0, // Initial price of the token at tick = 0
-            priceYearlyChange: 0.8, // Overall price change after a year => -10%
+            priceYearlyChange: 1.0, // Overall price change after a year => -10%
         },
         tokenB: {
             name: "BNB",
             decimals: 18, // Native token, must supply decimals for Wei-Ether conversion
             initalPriceUSDT: 300.0, // Initial price of the token at tick = 0
-            priceYearlyChange: 1.3, // Overall price change after a year => +20%
+            priceYearlyChange: 1.0, // Overall price change after a year => +20%
         },
         tokenLP: {
             name: "CAKE-BNB LP",
@@ -17,20 +17,20 @@ export const env = {
     },
     txnSettings: {
         harvestTokenA: {
-            gasPrice: 20000000000, // Gas prices are in terms of wei
-            gasLimit: 250000, // Gas limits are arbitary quotes to be consumed when invoking EVM
+            gasPrice: 0, // Gas prices are in terms of wei
+            gasLimit: 0, // Gas limits are arbitary quotes to be consumed when invoking EVM
         },
         swapTokenAToNative: {
-            gasPrice: 10000000000,
-            gasLimit: 200000,
+            gasPrice: 0,
+            gasLimit: 0,
         },
         getNewLP: {
-            gasPrice: 10000000000,
-            gasLimit: 250000,
+            gasPrice: 0,
+            gasLimit: 0,
         },
         stakeLP: {
-            gasPrice: 20000000000,
-            gasLimit: 250000,
+            gasPrice: 0,
+            gasLimit: 0,
         },
     },
     account: {
