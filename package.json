@@ -1,5 +1,5 @@
 {
-  "name": "auto_compounder_assignment",
+  "name": "web3_auto_compounder",
   "version": "1.0.0",
   "description": "An assignment for auto-compounder of tokens",
   "type": "module",
@@ -10,14 +10,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/chy111126/auto_compounder_assignment.git"
+    "url": "git+https://github.com/chy111126/web3_auto_compounder.git"
   },
   "author": "Tom Chau",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/chy111126/auto_compounder_assignment/issues"
+    "url": "https://github.com/chy111126/web3_auto_compounder/issues"
   },
-  "homepage": "https://github.com/chy111126/auto_compounder_assignment#readme",
+  "homepage": "https://github.com/chy111126/web3_auto_compounder#readme",
   "devDependencies": {},
   "dependencies": {
     "web3": "^1.7.0"
