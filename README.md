@@ -41,4 +41,4 @@ The details of setting can be found at: `src/common/envs/cake_bnb_mock.js`
 
 An implementation based on BakerySwap router/token/etc. smart contracts. Since the code has been tested under BSC testnet, reward function cannot be tested as there are no yields to harvest. However, several functions are still exposed to proof that web3.js invocation works and it should work theoretically under real-world environment.
 
-The details of setting can be found at: `src/common/envs/cakebake_bnb_testnet.js`
+The details of setting can be found at: `src/common/envs/bake_bnb_testnet.js`
