@@ -163,6 +163,21 @@ export class BakerySwapContractService extends BaseContractService{
     return txnResult;
   }
 
+  async getStakedLPBalance() {
+    // Skipping implementation as it is unused in the demostration
+    throw new Error("Not yet implemented.");
+  }
+
+  async unstakeLP(tokenLPAmount) {
+    // Skipping implementation as it is unused in the demostration
+    throw new Error("Not yet implemented.");
+  }
+
+  async removeLP(tokenLPAmount) {
+    // Skipping implementation as it is unused in the demostration
+    throw new Error("Not yet implemented.");
+  }
+
   async getTokenAReward() {
     // Get BEP-20 pending token from smart contract function, in terms of BEP-20 token unit (i.e. CAKE)
     var contract = new this.web3.eth.Contract(lpAbi, this.tokenLP.stakingAddress);
@@ -170,6 +185,22 @@ export class BakerySwapContractService extends BaseContractService{
     var ptBalance = this.web3.utils.fromWei(balance, 'ether');
 
     return ptBalance;
+  }
+
+  async getTokenAPricePerB() {
+    // getting token A price based on token B (i.e. CAKE/BNB)
+    var amountIn = 1 * 10 ** this.tokenA.decimals;
+    var routerPath = [this.tokenA.address, this.tokenB.wrappedAddress];
+
+    // Get price-converted output amount
+    var amountOutMin = await this._getAmountsOut(
+      routerAbi,
+      this.web3.utils.toHex(amountIn),
+      routerPath,
+    );
+
+    // Convert back to decimal unit
+    return amountOutMin / (10 ** this.tokenB.decimals);
   }
 
 }

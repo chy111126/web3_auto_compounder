@@ -35,6 +35,12 @@ export class BaseContractService {
     throw new Error("Not yet implemented.");
   }
 
+  async getTokenABalance() {
+    // Get BEP-20 token balance from smart contract function, in terms of BEP-20 token unit (i.e. CAKE)
+    // Inherited function shall supplement the token ABI for the internal function below, but caller does not need to take care of this.
+    throw new Error("Not yet implemented.");
+  }
+
   async _getTokenABalance(tokenAbi) {
     // Get BEP-20 token balance from smart contract function, in terms of BEP-20 token unit (i.e. CAKE)
     var contract = new this.web3.eth.Contract(tokenAbi, this.tokenA.address);
@@ -50,6 +56,12 @@ export class BaseContractService {
     var bBalance = this.web3.utils.fromWei(balance, 'ether');
     
     return bBalance;
+  }
+
+  async getLPTokenBalance() {
+    // Get LP token balance from smart contract function
+    // Inherited function shall supplement the token ABI for the internal function below, but caller does not need to take care of this.
+    throw new Error("Not yet implemented.");
   }
 
   async _getLPTokenBalance(tokenAbi) {

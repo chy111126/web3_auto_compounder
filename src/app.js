@@ -1,8 +1,7 @@
-import { exit } from "process";
+// A routine for running mock service
 import { MockContractService } from "./services/mock_service.js";
 
 // Create service and auto-compunder environment
-var data = (await import('fs')).readFileSync('./src/common/wallets/bsc_testnet.txt', 'utf8');
 var env = (await import("./common/envs/cake_bnb_mock.js")).env;
 var cs = await new MockContractService().initialize(env);
 
