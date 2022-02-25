@@ -90,6 +90,8 @@ export class BaseContractService {
     rawTransaction['chainId'] = this.connectedChainId;
 
     var signedTx = await this.account.signTransaction(rawTransaction);
+    // web3.eth.sendSignedTransaction::PromiEvent: 
+    // A promise combined event emitter. Resolves when the transaction receipt is available.
     var result = await this.web3.eth.sendSignedTransaction(signedTx.rawTransaction)
     .on('transactionHash', function(hash){
         // console.log('transactionHash', hash);
@@ -98,12 +100,12 @@ export class BaseContractService {
         // console.log('confirmation', confirmationNumber, receipt);
     })
     .on('receipt', function(receipt){
-        // console.log('receipt', receipt);
+        console.log('receipt', receipt);
     })
     .on('error', function(error, receipt) { // If the transaction was rejected by the network with a receipt, the second parameter will be the receipt.
         console.error("Error:", error, "Receipt:", receipt);
     });
-
+    
     return result;
   }
 
