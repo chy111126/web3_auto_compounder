@@ -22,7 +22,9 @@ if (process.argv[2]) {
             var targetingTokenA = originalTokenA / 2;
             await cs.swapTokenAToNative(targetingTokenA);
             console.log(`Converted token A: ${originalTokenA} => ${targetingTokenA}`);
+            break;
         case "getNewLP":
+            var targetingTokenA = await cs.getTokenABalance();
             var expectedControlCost = cs.getExpectedControlCost();
             var tokenPairPrice = await cs.getTokenAPricePerB();
             console.log(`expectedControlCost: ${expectedControlCost}; tokenPairPrice: ${tokenPairPrice}`);
@@ -39,7 +41,8 @@ if (process.argv[2]) {
             var totalLP = await cs.getLPTokenBalance();
             await cs.stakeLP(totalLP);
             var remainingLP = await cs.getLPTokenBalance();
-            console.log(`Remaining LP balance after stake: ${remainingLP}`);
+            console.log(`Remaining LP balance in wallet: ${remainingLP}`);
+            break;
         default:
             console.log("Invalid command, exiting ...");
     }

@@ -8,11 +8,11 @@ var cs = await new MockContractService().initialize(env);
 // Get initial stats
 var tokenPair = `${cs.getTokenAName()}/${cs.getTokenBName()}`;
 console.log(`Program start: ${tokenPair} price ${await cs.getTokenAPricePerB()}`);
-var tokenAAmount = await cs.getTokenABalance();
-var tokenBAmount = await cs.getTokenBBalance();
-console.log(`Wallet initial balance: ${cs.getTokenAName()}=>${tokenAAmount}; ${cs.getTokenBName()}=>${tokenBAmount}; LP=>${await cs.getLPTokenBalance()}`);
-var walletValueUSDT = tokenAAmount * await cs.getTokenAPriceInUSDT() + tokenBAmount * await cs.getTokenBPriceInUSDT();
-console.log(`Wallet value in USDT: ${walletValueUSDT}`);
+var initialTokenAAmount = await cs.getTokenABalance();
+var initialTokenBAmount = await cs.getTokenBBalance();
+console.log(`Wallet initial balance: ${cs.getTokenAName()}=>${initialTokenAAmount}; ${cs.getTokenBName()}=>${initialTokenBAmount}; LP=>${await cs.getLPTokenBalance()}`);
+var initialWalletValueUSDT = initialTokenAAmount * await cs.getTokenAPriceInUSDT() + initialTokenBAmount * await cs.getTokenBPriceInUSDT();
+console.log(`Wallet initial value in USDT: ${initialWalletValueUSDT}`);
 
 // Program running time
 var tick = 0;
@@ -39,9 +39,10 @@ while(tick < tickLimit) {
     var tokenPairPrice = await cs.getTokenAPricePerB();
     var tokenAReward = await cs.getTokenAReward();
     var tokenARewardInB = tokenAReward * tokenPairPrice;
-    //console.log(`Tick=${tick}; Wallet: ${cs.getTokenAName()}=>${await cs.getTokenABalance()}; ${cs.getTokenBName()}=>${await cs.getTokenBBalance()}; LP=>${await cs.getLPTokenBalance()}; expectedControlCost: ${expectedControlCost}; Reward: ${tokenARewardInB}`)
+    var RewardOverCostThreshold = expectedControlCost * reinvestCostRatio;
+    console.log(`Tick=${tick}; Wallet: ${cs.getTokenAName()}=>${await cs.getTokenABalance()}; ${cs.getTokenBName()}=>${await cs.getTokenBBalance()}; staked LP=>${await cs.getStakedLPBalance()}; RewardOverCostThreshold: ${RewardOverCostThreshold}; Reward (In BNB): ${tokenARewardInB}`)
 
-    if (tokenARewardInB > expectedControlCost * reinvestCostRatio && autoCompunding) {
+    if (tokenARewardInB > RewardOverCostThreshold && autoCompunding) {
         // Harvest and reinvest if criteria met
         await cs.harvestTokenA();
 
@@ -72,7 +73,11 @@ await cs.unstakeLP(await cs.getStakedLPBalance());
 await cs.removeLP(await cs.getLPTokenBalance());
 var tokenAAmount = await cs.getTokenABalance();
 var tokenBAmount = await cs.getTokenBBalance();
+console.log("------------------------------------------------");
+console.log(`Auto-compounding enabled: ${autoCompunding}`);
+console.log(`Wallet initial balance: ${cs.getTokenAName()}=>${initialTokenAAmount}; ${cs.getTokenBName()}=>${initialTokenBAmount}; LP=>${await cs.getLPTokenBalance()}`);
+console.log(`Wallet initial value in USDT: ${initialWalletValueUSDT}`);
 console.log(`Final wallet balance: ${cs.getTokenAName()}=>${tokenAAmount}; ${cs.getTokenBName()}=>${tokenBAmount}; LP=>${await cs.getLPTokenBalance()}`);
 var finalWalletValueUSDT = tokenAAmount * await cs.getTokenAPriceInUSDT() + tokenBAmount * await cs.getTokenBPriceInUSDT();
 console.log(`Final wallet value in USDT: ${finalWalletValueUSDT}`);
-console.log(`Auto-compounder yield: ${(finalWalletValueUSDT - walletValueUSDT) / walletValueUSDT * 100}%`);
+console.log(`Auto-compounder yield: ${(finalWalletValueUSDT - initialWalletValueUSDT) / initialWalletValueUSDT * 100}%`);

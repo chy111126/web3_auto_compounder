@@ -65,7 +65,7 @@ export class BakerySwapContractService extends BaseContractService{
   }
 
   async swapTokenAToNative(tokenAAmount) {
-    var amountIn = this.web3.utils.toWei(tokenAAmount, 'ether');
+    var amountIn = this.web3.utils.toWei(tokenAAmount.toString(), 'ether');
     var routerPath = [this.tokenA.address, this.tokenB.wrappedAddress];
 
     // Get price-converted output amount
@@ -112,8 +112,8 @@ export class BakerySwapContractService extends BaseContractService{
     */
 
     // Convert token A/B to wei format
-    var tokenAWeis = this.web3.utils.toWei(tokenAAmount, 'ether');
-    var tokenBWeis = this.web3.utils.toWei(tokenBAmount, 'ether');
+    var tokenAWeis = this.web3.utils.toWei(tokenAAmount.toString(), 'ether');
+    var tokenBWeis = this.web3.utils.toWei(tokenBAmount.toString(), 'ether');
 
     // Preparing txn data from contract
     var slippage = 0.05;
@@ -142,7 +142,7 @@ export class BakerySwapContractService extends BaseContractService{
   }
 
   async stakeLP(tokenLPAmount) {
-    var tokenLPWeis = this.web3.utils.toWei(tokenLPAmount, 'ether');
+    var tokenLPWeis = this.web3.utils.toWei(tokenLPAmount.toString(), 'ether');
     var contract = new this.web3.eth.Contract(lpAbi, this.tokenLP.stakingAddress);
     var data = contract.methods.stake(
       this.tokenLP.address,
@@ -189,7 +189,7 @@ export class BakerySwapContractService extends BaseContractService{
 
   async getTokenAPricePerB() {
     // getting token A price based on token B (i.e. CAKE/BNB)
-    var amountIn = this.web3.utils.toWei(1, 'ether');
+    var amountIn = this.web3.utils.toWei('1', 'ether');
     var routerPath = [this.tokenA.address, this.tokenB.wrappedAddress];
 
     // Get price-converted output amount
@@ -200,7 +200,7 @@ export class BakerySwapContractService extends BaseContractService{
     );
 
     // Convert back to decimal unit
-    return this.web3.utils.fromWei(tokenAAmount, 'ether');
+    return this.web3.utils.fromWei(amountOutMin, 'ether');
   }
 
 }
