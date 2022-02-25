@@ -19,7 +19,7 @@ This is an assignment for auto-compounding a LP-staking pool from a DEX (e.g. Pa
 
 ## Technical details
 
-For this auto-compounder, an expected cost will be estimated for doing the harvest-swap-LP minting and staking loop. If the currently-pending reward exceeds this expected cost by a certain factor (e.g. 10), the reinvesting loop will be invoked. The default time interval for this routine is every hour and it is configurable from a config file.
+For this auto-compounder, an expected cost will be estimated for doing the harvest-swap-LP minting and staking loop. If the currently-pending reward exceeds this expected cost by a certain factor (e.g. 10), the reinvesting loop will be invoked. The default time interval for this routine is every hour and it is configurable from a config file. The routine will also avoid exhausting the native token from the reinvesting loop such that it can sustain itself.
 
 ---
 
